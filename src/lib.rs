@@ -3,17 +3,23 @@ use std::collections::HashMap;
 type Address = usize;
 type Number = i32;
 
+enum Operand {
+    Number(Number),
+    Address(Address),
+}
+
 enum Instruction {
-    LDM(Number),
-    LDD(Address),
-    STO(Address),
+    Load(Operand),
+    Store(Address),
+    Add(Operand),
+    Subtract(Operand),
     OUT,
 }
 
 struct Execution {
     instructions: Vec<Instruction>,
     memory: HashMap<Address, Number>,
-    acc: Number,
+    accumulator: Number,
 }
 
 impl Execution {
@@ -21,22 +27,38 @@ impl Execution {
         Execution {
             instructions,
             memory: Default::default(),
-            acc: 0,
+            accumulator: 0,
         }
     }
 
     pub fn execute(&mut self) {
         let mut i = 0;
         while i < self.instructions.len() {
-            match self.instructions[i] {
-                Instruction::LDM(number) => self.acc = number,
-                Instruction::LDD(address) => {
-                    self.acc = *self.memory.get(&address).expect("invalid address")
+            let instruction = &self.instructions[i];
+            match instruction {
+                Instruction::Load(operand) => {
+                    self.accumulator = *match operand {
+                        Operand::Number(number) => number,
+                        Operand::Address(address) => {
+                            self.memory.get(&address).expect("invalid address")
+                        }
+                    }
                 }
-                Instruction::STO(address) => {
-                    self.memory.insert(address, self.acc);
+                Instruction::Store(address) => {
+                    self.memory.insert(*address, self.accumulator);
                 }
-                Instruction::OUT => println!("{}", self.acc),
+                Instruction::Add(operand) | Instruction::Subtract(operand) => {
+                    let number = match operand {
+                        Operand::Number(number) => number,
+                        Operand::Address(address) => self.memory.get(&address).expect(""),
+                    };
+                    match instruction {
+                        Instruction::Add(_) => self.accumulator += number,
+                        Instruction::Subtract(_) => self.accumulator -= number,
+                        _ => {}
+                    }
+                }
+                Instruction::OUT => println!("{}", self.accumulator),
             }
             i += 1;
         }
@@ -49,23 +71,41 @@ mod tests {
 
     #[test]
     fn ldm() {
-        let mut execution = Execution::new(vec![Instruction::LDM(1)]);
+        let mut execution = Execution::new(vec![Instruction::Load(Operand::Number(1))]);
         execution.execute();
-        assert_eq!(execution.acc, 1);
+        assert_eq!(execution.accumulator, 1);
     }
 
     #[test]
     fn ldd() {
-        let mut execution = Execution::new(vec![Instruction::LDD(2)]);
+        let mut execution = Execution::new(vec![Instruction::Load(Operand::Address(2))]);
         execution.memory.insert(2, 1);
         execution.execute();
-        assert_eq!(execution.acc, 1);
+        assert_eq!(execution.accumulator, 1);
     }
 
     #[test]
     fn sto() {
-        let mut execution = Execution::new(vec![Instruction::STO(0)]);
+        let mut execution = Execution::new(vec![Instruction::Store(0)]);
         execution.execute();
         assert_eq!(execution.memory.get(&0), Some(&0));
+    }
+
+    #[test]
+    fn add_and_sub_number() {
+        let mut execution = Execution::new(vec![
+            Instruction::Add(Operand::Number(2)),
+            Instruction::Subtract(Operand::Number(1)),
+        ]);
+        execution.execute();
+        assert_eq!(execution.accumulator, 1);
+    }
+
+    #[test]
+    fn add_address() {
+        let mut execution = Execution::new(vec![Instruction::Add(Operand::Address(0))]);
+        execution.memory.insert(0, 1);
+        execution.execute();
+        assert_eq!(execution.accumulator, 1);
     }
 }
