@@ -16,3 +16,9 @@ lex.yy.c
 y.tab.c
 y.tab.h
 a.out
+
+
+# Added by cargo
+
+/target
+/Cargo.lock
