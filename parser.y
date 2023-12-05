@@ -37,6 +37,8 @@ instruction
 	;
 %%
 
+#include "assembler.h"
+
 int main()
 {
 	yyparse();
