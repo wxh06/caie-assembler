@@ -36,11 +36,3 @@ instruction
 		{ printf("%d\n", ACC); }
 	;
 %%
-
-#include "assembler.h"
-
-int main()
-{
-	yyparse();
-	return 0;
-}
