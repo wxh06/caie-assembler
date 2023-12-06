@@ -5,8 +5,6 @@
 %{
 extern int yylex(void);
 
-__attribute__((visibility("default"))) extern int yyparse(void);
-
 int yywrap()
 {
 	return 1;

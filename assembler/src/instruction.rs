@@ -1,40 +1,14 @@
+use crate::operand::{Address, Number, Operand};
+use crate::register::{Register, Registers};
 use std::collections::HashMap;
 
-type Address = usize;
-type Number = i32;
-
-enum Register {
-    ACC,
-    IX,
-}
-
-enum Operand {
-    Number(Number),
-    Address(Address),
-}
-
-enum Instruction {
+pub enum Instruction {
     Load(Register, Operand),
     Move(Register),
     Store(Address),
     Add(Register, Operand),
     Subtract(Register, Operand),
-    OUT,
-}
-
-#[derive(Default)]
-struct Registers {
-    accumulator: Number,
-    index_register: Number,
-}
-
-impl Registers {
-    pub fn get_register_mut(&mut self, register: &Register) -> &mut Number {
-        match register {
-            Register::ACC => &mut self.accumulator,
-            Register::IX => &mut self.index_register,
-        }
-    }
+    Output,
 }
 
 #[derive(Default)]
@@ -80,7 +54,7 @@ impl Execution {
                 Instruction::Subtract(register, operand) => {
                     *self.registers.get_register_mut(register) -= self.get_operand_value(operand)
                 }
-                Instruction::OUT => println!("{}", self.registers.accumulator),
+                Instruction::Output => println!("{}", self.registers.accumulator),
             }
             i += 1;
         }

@@ -1,1 +1,3 @@
-mod instructions;
+mod instruction;
+mod operand;
+mod register;
