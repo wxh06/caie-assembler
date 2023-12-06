@@ -70,3 +70,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+# Added by cargo
+
+/target
+/Cargo.lock
