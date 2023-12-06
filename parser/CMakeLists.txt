@@ -13,5 +13,6 @@ add_library(${PROJECT_NAME}
         ${BISON_Parser_OUTPUTS}
         ${FLEX_Scanner_OUTPUTS}
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE ${FLEX_LIBRARIES})
-target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
+# target_link_libraries(${PROJECT_NAME} PRIVATE ${FLEX_LIBRARIES})
+set_target_properties(${PROJECT_NAME} PROPERTIES C_VISIBILITY_PRESET hidden)
+target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)

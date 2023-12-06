@@ -1,4 +1,4 @@
-#include "y.tab.c"
+#include "yy.h"
 #include "assembler.h"
 
 int main()
