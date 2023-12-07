@@ -13,7 +13,7 @@ pub enum Instruction {
 
 #[derive(Default)]
 pub struct Execution {
-    instructions: Vec<Instruction>,
+    pub instructions: Vec<Instruction>,
     memory: HashMap<Address, Number>,
     registers: Registers,
 }

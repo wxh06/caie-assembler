@@ -1,4 +1,4 @@
-mod instruction;
-mod operand;
+pub mod instruction;
+pub mod operand;
 pub mod parser;
-mod register;
+pub mod register;

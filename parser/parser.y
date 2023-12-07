@@ -1,5 +1,6 @@
 %{
 #include <stdio.h>
+#include "parser.h"
 %}
 
 %{
@@ -16,10 +17,6 @@ void yyerror(const char *s)
 }
 %}
 
-%{
-int ACC = 0;
-%}
-
 %token DENARY LDM OUT
 
 %%
@@ -31,8 +28,9 @@ instructions
 
 instruction
 	: LDM DENARY
-		{ ACC = $2; }
+		{ load_acc_number($2); }
 	| OUT
-		{ printf("%d\n", ACC); }
+		{ output(); }
 	;
+
 %%

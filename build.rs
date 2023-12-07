@@ -62,6 +62,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
+        .clang_arg(format!("-I{}", libsrc_path.to_str().unwrap()))
         .header(libbin_path.join("lex.yy.c").to_str().unwrap())
         .header(libbin_path.join("y.tab.c").to_str().unwrap())
         // Tell cargo to invalidate the built crate whenever any of the
