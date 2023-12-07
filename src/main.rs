@@ -1,4 +1,4 @@
-use caie_assembler::yyparse;
+use caie_assembler::parser::yyparse;
 
 fn main() {
     unsafe {

@@ -6,34 +6,35 @@ use std::path::PathBuf;
 use bindgen::CargoCallbacks;
 
 fn main() {
-    // This is the directory where the `c` library is located.
-    let libsrc_path = PathBuf::from("parser")
+    let profile = env::var("PROFILE").unwrap();
+
+    let srcdir_path = PathBuf::from(".")
         // Canonicalize the path as `rustc-link-search` requires an absolute
         // path.
         .canonicalize()
         .expect("cannot canonicalize path");
-    let libdir_path = libsrc_path.join("build");
+    let bindir_path = srcdir_path.join(format!("cmake-build-{}", profile));
 
-    // This is the path to the `c` headers file.
-    let headers_path = libsrc_path.join("parser.h");
-    let headers_path_str = headers_path.to_str().expect("Path is not a valid string");
+    // This is the directory where the `c` library is located.
+    let libsrc_path = srcdir_path.join("parser");
+    let libbin_path = bindir_path.join("parser");
 
     // Tell cargo to look for shared libraries in the specified directory
-    println!("cargo:rustc-link-search={}", libdir_path.to_str().unwrap());
+    println!("cargo:rustc-link-search={}", libbin_path.to_str().unwrap());
 
     // Tell cargo to tell rustc to link our `parser` library. Cargo will
     // automatically know it must look for a `libparser.a` file.
     println!("cargo:rustc-link-lib=parser");
 
     // Tell cargo to invalidate the built crate whenever the header changes.
-    println!("cargo:rerun-if-changed={}", headers_path_str);
+    println!("cargo:rerun-if-changed={}", libsrc_path.to_str().unwrap());
 
     if !std::process::Command::new("cmake")
-        .arg(format!("-DCMAKE_BUILD_TYPE={}", env::var("PROFILE").unwrap()))
+        .arg(format!("-DCMAKE_BUILD_TYPE={}", profile))
         .arg("-S")
-        .arg(&libsrc_path)
+        .arg(&srcdir_path)
         .arg("-B")
-        .arg(&libdir_path)
+        .arg(&bindir_path)
         .output()
         .expect("could not spawn `cmake`")
         .status
@@ -45,7 +46,7 @@ fn main() {
 
     if !std::process::Command::new("cmake")
         .arg("--build")
-        .arg(&libdir_path)
+        .arg(&bindir_path)
         .output()
         .expect("could not spawn `cmake`")
         .status
@@ -61,7 +62,8 @@ fn main() {
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
-        .header(headers_path_str)
+        .header(libbin_path.join("lex.yy.c").to_str().unwrap())
+        .header(libbin_path.join("y.tab.c").to_str().unwrap())
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(CargoCallbacks))
