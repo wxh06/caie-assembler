@@ -9,6 +9,7 @@ pub enum Instruction {
     Add(Register, Operand),
     Subtract(Register, Operand),
     Output,
+    End,
 }
 
 #[derive(Default)]
@@ -55,6 +56,7 @@ impl Execution {
                     *self.registers.get_register_mut(register) -= self.get_operand_value(operand)
                 }
                 Instruction::Output => println!("{}", self.registers.accumulator),
+                Instruction::End => break,
             }
             i += 1;
         }

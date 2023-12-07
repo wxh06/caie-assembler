@@ -17,7 +17,8 @@ void yyerror(const char *s)
 }
 %}
 
-%token DENARY LDM OUT
+%token NUMBER ACC IX
+%token LDM LDD LDI LDX LDR MOV STO ADD SUB INC DEC JMP CMP CMI JPE JPN IN OUT END
 
 %%
 
@@ -27,10 +28,27 @@ instructions
 	;
 
 instruction
-	: LDM DENARY
+	: LDM NUMBER
 		{ load_acc_number($2); }
+
+	| ADD NUMBER
+		{ add_acc_number($2); }
+	| SUB NUMBER
+		{ subtract_acc_number($2); }
+
+	| INC ACC
+		{ add_acc_number(1); }
+	| DEC ACC
+		{ subtract_acc_number(1); }
+	| INC IX
+		{ add_ix_number(1); }
+	| DEC IX
+		{ subtract_ix_number(1); }
+
 	| OUT
 		{ output(); }
+	| END
+		{ end(); }
 	;
 
 %%

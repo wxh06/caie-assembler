@@ -7,25 +7,52 @@ use std::sync::Mutex;
 
 static mut EXECUTION: Lazy<Mutex<Execution>> = Lazy::new(|| Default::default());
 
-unsafe extern "C" fn load_acc_number(number: Number) {
-    EXECUTION
-        .lock()
-        .unwrap()
-        .instructions
-        .push(Instruction::Load(Register::ACC, Operand::Number(number)))
+pub unsafe fn append_instruction(instruction: Instruction) {
+    EXECUTION.lock().unwrap().instructions.push(instruction)
 }
+
+unsafe extern "C" fn load_acc_number(number: Number) {
+    append_instruction(Instruction::Load(Register::ACC, Operand::Number(number)))
+}
+
+unsafe extern "C" fn add_acc_number(number: Number) {
+    append_instruction(Instruction::Add(Register::ACC, Operand::Number(number)))
+}
+
+unsafe extern "C" fn subtract_acc_number(number: Number) {
+    append_instruction(Instruction::Subtract(
+        Register::ACC,
+        Operand::Number(number),
+    ))
+}
+
+unsafe extern "C" fn add_ix_number(number: Number) {
+    append_instruction(Instruction::Add(Register::ACC, Operand::Number(number)))
+}
+
+unsafe extern "C" fn subtract_ix_number(number: Number) {
+    append_instruction(Instruction::Subtract(
+        Register::ACC,
+        Operand::Number(number),
+    ))
+}
+
 unsafe extern "C" fn out() {
-    EXECUTION
-        .lock()
-        .unwrap()
-        .instructions
-        .push(Instruction::Output)
+    append_instruction(Instruction::Output)
+}
+unsafe extern "C" fn end() {
+    append_instruction(Instruction::End)
 }
 
 fn main() {
     unsafe {
         parser::load_acc_number = Some(load_acc_number);
+        parser::add_acc_number = Some(add_acc_number);
+        parser::subtract_acc_number = Some(subtract_acc_number);
+        parser::add_ix_number = Some(add_ix_number);
+        parser::subtract_ix_number = Some(subtract_ix_number);
         parser::output = Some(out);
+        parser::end = Some(end);
 
         parser::yyparse();
 
