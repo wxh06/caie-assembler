@@ -1,44 +1,40 @@
-use crate::instruction::{Address, Instruction, Number, Operand, Operation};
+use crate::instruction::{Address, Instruction, Number, Operand, Operation, Register};
 use wasm_bindgen::prelude::wasm_bindgen;
 
-impl Operand {
-    fn new(string: &str) -> Operand {
-        let address: Result<Address, _> = string.parse();
-        match address {
-            Ok(address) => Operand::Address(address),
-            Err(_) => Operand::Number(Self::parse_number(string)),
-        }
-    }
-    fn parse_number(string: &str) -> Number {
-        let prefix = &string[..1];
-        let number = &string[1..];
-        match prefix {
-            "#" => Number::from_str_radix(number, 10).expect("Invalid denary number"),
-            "B" => Number::from_str_radix(number, 2).expect("Invalid binary number"),
-            "&" => Number::from_str_radix(number, 16).expect("Invalid hexadecimal number"),
-            _ => panic!("Invalid number"),
-        }
-    }
-    /// TODO: Label support
-    fn parse_address(string: &str) -> Address {
-        string.parse().unwrap()
+pub fn parse_operand(string: &str) -> Operand {
+    Operand::new(string)
+}
+
+pub fn parse_number(string: &str) -> Number {
+    let prefix = &string[..1];
+    let number = &string[1..];
+    match prefix {
+        "#" => Number::from_str_radix(number, 10).expect("Invalid denary number"),
+        "B" => Number::from_str_radix(number, 2).expect("Invalid binary number"),
+        "&" => Number::from_str_radix(number, 16).expect("Invalid hexadecimal number"),
+        _ => panic!("Invalid number"),
     }
 }
 
-impl Operation {
-    fn new<'a>(opcode: &str, operand: &mut impl Iterator<Item = &'a str>) -> Operation {
-        let mut next_operand = || {
-            operand
-                .next()
-                .expect(format!("Too few operands to {}", opcode).as_ref())
-        };
-        match opcode {
-            "LDM" => Operation::LDM(Operand::parse_number(next_operand())),
-            "LDD" => Operation::LDD(Operand::parse_address(next_operand())),
-            "ADD" => Operation::ADD(Operand::new(next_operand())),
-            "OUT" => Operation::OUT,
-            "END" => Operation::END,
-            _ => panic!("Unknown opcode"),
+pub fn parse_register(string: &str) -> Register {
+    match string {
+        "ACC" => Register::ACC,
+        "IX" => Register::IX,
+        _ => panic!("Invalid register"),
+    }
+}
+
+/// TODO: Label support
+pub fn parse_address(string: &str) -> Address {
+    string.parse().unwrap()
+}
+
+impl Operand {
+    pub fn new(string: &str) -> Operand {
+        let address: Result<Address, _> = string.parse();
+        match address {
+            Ok(address) => Operand::Address(address),
+            Err(_) => Operand::Number(parse_number(string)),
         }
     }
 }

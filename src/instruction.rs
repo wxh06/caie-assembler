@@ -1,3 +1,5 @@
+use crate::parser::{parse_address, parse_number, parse_operand, parse_register};
+use parser_derive::Parser;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 pub type Number = i32;
@@ -15,7 +17,7 @@ pub enum Operand {
     Address(Address),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Parser, PartialEq)]
 pub enum Operation {
     LDM(Number),
     LDD(Address),
