@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::instruction::{AbsoluteAddress, Address, Instruction, Number, Operation, Register};
 use crate::utils::set_panic_hook;
-use crate::Assembly;
+use crate::Assembler;
 
 trait OperandParser {
     fn parse(string: &str) -> Result<Self, String>
@@ -141,12 +141,13 @@ impl Instruction {
 }
 
 #[wasm_bindgen]
-impl Assembly {
+impl Assembler {
     #[wasm_bindgen(constructor)]
-    pub fn new(source: &str, offset: AbsoluteAddress) -> Result<Assembly, String> {
+    pub fn new(source: &str, offset: AbsoluteAddress) -> Result<Assembler, String> {
         Ok(Self {
             instructions: Self::parse(&mut source.split_terminator('\n'))?,
             offset,
+            symbol_table: Default::default(),
         })
     }
     fn parse<'a>(
