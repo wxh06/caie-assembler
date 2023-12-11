@@ -1,7 +1,7 @@
 use crate::instruction::{AbsoluteAddress, Address, Assembler, SymbolTable};
 
 impl Assembler {
-    pub fn generate_symbol_table(&mut self) {
+    pub(crate) fn generate_symbol_table(&mut self) {
         for (i, instruction) in self.instructions.iter().enumerate() {
             for label in &instruction.labels {
                 self.symbol_table.insert(label.clone(), i + self.offset);

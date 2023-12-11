@@ -1,5 +1,6 @@
 mod instruction;
 mod parser;
+mod symbol;
 mod utils;
 
-pub use instruction::Assembly;
+pub use instruction::Assembler;

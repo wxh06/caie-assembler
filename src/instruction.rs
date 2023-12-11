@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 pub type Number = i32;
@@ -47,8 +48,12 @@ pub struct Instruction {
     pub operation: Option<Operation>,
 }
 
+pub type SymbolTable = HashMap<String, AbsoluteAddress>;
+
 #[wasm_bindgen]
-pub struct Assembly {
+#[derive(Debug, Eq, PartialEq)]
+pub struct Assembler {
     pub(crate) instructions: Vec<Instruction>,
     pub(crate) offset: AbsoluteAddress,
+    pub(crate) symbol_table: SymbolTable,
 }
