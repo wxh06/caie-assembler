@@ -67,7 +67,7 @@ impl OperandParser for Register {
 }
 
 impl Operation {
-    fn parse<'a>(opcode: &str, operand: &str) -> Result<Self, String> {
+    fn parse(opcode: &str, operand: &str) -> Result<Self, String> {
         macro_rules! operand {
             ($ty:ident) => {
                 $ty::parse(operand)?
@@ -115,11 +115,11 @@ impl Operation {
 }
 
 #[derive(Debug, Deserialize)]
-struct Location {
-    address: AbsoluteAddress,
-    label: String,
-    opcode: String,
-    operand: String,
+pub struct Location {
+    pub address: AbsoluteAddress,
+    pub label: String,
+    pub opcode: String,
+    pub operand: String,
 }
 
 impl Instruction {
@@ -143,11 +143,13 @@ impl Assembler {
                 .collect::<Result<_, _>>()?,
         )
     }
-    fn from_records(records: Vec<Location>) -> Result<Self, String> {
+    pub(crate) fn from_records(records: Vec<Location>) -> Result<Self, String> {
         let mut symbol_table: SymbolTable = Default::default();
         let mut instructions: Instructions = Default::default();
         for record in records {
-            symbol_table.insert(record.label, record.address);
+            if !record.label.is_empty() {
+                symbol_table.insert(record.label, record.address);
+            }
             instructions.insert(
                 record.address,
                 Instruction::from(&record.opcode, &record.operand)?,
