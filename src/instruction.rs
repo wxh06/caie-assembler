@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+
 use wasm_bindgen::prelude::wasm_bindgen;
 
 pub type Number = i32;
@@ -42,18 +43,18 @@ pub enum Operation {
     End,
 }
 
-#[derive(Debug, Default, Eq, PartialEq)]
-pub struct Instruction {
-    pub labels: Vec<String>,
-    pub operation: Option<Operation>,
+#[derive(Debug, Eq, PartialEq)]
+pub enum Instruction {
+    Operation(Operation),
+    Data(Number),
 }
 
 pub type SymbolTable = HashMap<String, AbsoluteAddress>;
+pub type Instructions = HashMap<AbsoluteAddress, Instruction>;
 
 #[wasm_bindgen]
 #[derive(Debug, Eq, PartialEq)]
 pub struct Assembler {
-    pub(crate) instructions: Vec<Instruction>,
-    pub(crate) offset: AbsoluteAddress,
+    pub(crate) instructions: Instructions,
     pub(crate) symbol_table: SymbolTable,
 }

@@ -1,6 +1,9 @@
+use serde::Deserialize;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::instruction::{AbsoluteAddress, Address, Instruction, Number, Operation, Register};
+use crate::instruction::{
+    AbsoluteAddress, Address, Instruction, Instructions, Number, Operation, Register, SymbolTable,
+};
 use crate::utils::set_panic_hook;
 use crate::Assembler;
 
@@ -64,17 +67,10 @@ impl OperandParser for Register {
 }
 
 impl Operation {
-    fn parse<'a>(
-        opcode: &str,
-        operands: &mut impl Iterator<Item = &'a str>,
-    ) -> Result<Self, String> {
+    fn parse<'a>(opcode: &str, operand: &str) -> Result<Self, String> {
         macro_rules! operand {
             ($ty:ident) => {
-                $ty::parse(
-                    operands
-                        .next()
-                        .ok_or_else(|| format!("Too few operands to `{}`", opcode))?,
-                )?
+                $ty::parse(operand)?
             };
         }
         macro_rules! operation {
@@ -114,46 +110,53 @@ impl Operation {
             "END" => Self::End,
             _ => return Err(format!("Unknown opcode `{}`", opcode)),
         };
-        if operands.next().is_some() {
-            return Err(format!("Too many operands to `{}`", opcode));
-        }
         Ok(operation)
     }
 }
 
+#[derive(Debug, Deserialize)]
+struct Location {
+    address: AbsoluteAddress,
+    label: String,
+    opcode: String,
+    operand: String,
+}
+
 impl Instruction {
-    fn parse(string: &str) -> Result<Self, String> {
-        set_panic_hook();
-        let mut instruction: Self = Default::default();
-        let mut split = string.split_ascii_whitespace();
-        for segment in split.by_ref() {
-            if segment.ends_with(':') {
-                instruction
-                    .labels
-                    .push(String::from(&segment[0..(segment.len() - 1)]));
-                continue;
-            }
-            instruction.operation = Some(Operation::parse(segment, &mut split)?);
-            break;
-        }
-        Ok(instruction)
+    fn from(opcode: &str, operand: &str) -> Result<Self, String> {
+        Ok(if opcode.is_empty() {
+            Self::Data(Number::parse(operand)?)
+        } else {
+            Self::Operation(Operation::parse(opcode, operand)?)
+        })
     }
 }
 
 #[wasm_bindgen]
 impl Assembler {
-    #[wasm_bindgen(constructor)]
-    pub fn new(source: &str, offset: AbsoluteAddress) -> Result<Assembler, String> {
-        Ok(Self {
-            instructions: Self::parse(&mut source.split_terminator('\n'))?,
-            offset,
-            symbol_table: Default::default(),
-        })
+    pub fn from_csv(data: &str) -> Result<Assembler, String> {
+        set_panic_hook();
+        let mut rdr = csv::Reader::from_reader(data.as_bytes());
+        Self::from_records(
+            rdr.deserialize()
+                .map(|record| record.map_err(|_| String::from("")))
+                .collect::<Result<_, _>>()?,
+        )
     }
-    fn parse<'a>(
-        instructions: &mut impl Iterator<Item = &'a str>,
-    ) -> Result<Vec<Instruction>, String> {
-        instructions.map(Instruction::parse).collect()
+    fn from_records(records: Vec<Location>) -> Result<Self, String> {
+        let mut symbol_table: SymbolTable = Default::default();
+        let mut instructions: Instructions = Default::default();
+        for record in records {
+            symbol_table.insert(record.label, record.address);
+            instructions.insert(
+                record.address,
+                Instruction::from(&record.opcode, &record.operand)?,
+            );
+        }
+        Ok(Self {
+            instructions,
+            symbol_table,
+        })
     }
 }
 
@@ -163,35 +166,32 @@ mod tests {
 
     #[test]
     fn parse_ldm() {
+        let a = Assembler::from_records(vec![Location {
+            address: 0,
+            label: String::from("L"),
+            opcode: String::from("LDM"),
+            operand: String::from("&FF"),
+        }])
+        .unwrap();
         assert_eq!(
-            Instruction::parse("A: B: LDM &FF"),
-            Ok(Instruction {
-                labels: vec![String::from("A"), String::from("B")],
-                operation: Some(Operation::LoadImmediate(255)),
-            })
+            a.instructions.get(&0),
+            Some(&Instruction::Operation(Operation::LoadImmediate(255)))
         );
+        assert_eq!(a.symbol_table.get("L"), Some(&0));
     }
 
     #[test]
     fn parse_ldr() {
         assert_eq!(
-            Instruction::parse("LDR B2"),
+            Instruction::from("LDR", "B2"),
             Err(String::from("Invalid binary number `2`"))
-        );
-    }
-
-    #[test]
-    fn parse_end() {
-        assert_eq!(
-            Instruction::parse("END #0"),
-            Err(String::from("Too many operands to `END`"))
         );
     }
 
     #[test]
     fn parse_unknown() {
         assert_eq!(
-            Instruction::parse("UNKNOWN"),
+            Instruction::from("UNKNOWN", ""),
             Err(String::from("Unknown opcode `UNKNOWN`"))
         );
     }
