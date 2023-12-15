@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use wasm_bindgen::prelude::wasm_bindgen;
 
-pub type Number = i32;
+pub type Number = u8;
 pub type AbsoluteAddress = usize;
 
 #[derive(Debug, Eq, PartialEq)]

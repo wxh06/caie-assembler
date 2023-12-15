@@ -125,7 +125,7 @@ struct Location {
 impl Instruction {
     fn from(opcode: &str, operand: &str) -> Result<Self, String> {
         Ok(if opcode.is_empty() {
-            Self::Data(Number::parse(operand)?)
+            Self::Data(operand.parse().or_else(|_| Number::parse(operand))?)
         } else {
             Self::Operation(Operation::parse(opcode, operand)?)
         })
