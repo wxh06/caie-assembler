@@ -1,10 +1,8 @@
-use serde::Deserialize;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::instruction::{
     AbsoluteAddress, Address, Instruction, Instructions, Number, Operation, Register, SymbolTable,
 };
-use crate::utils::set_panic_hook;
 use crate::Assembler;
 
 trait OperandParser {
@@ -114,12 +112,26 @@ impl Operation {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[wasm_bindgen]
+#[derive(Debug)]
 pub struct Location {
-    pub address: AbsoluteAddress,
-    pub label: String,
-    pub opcode: String,
-    pub operand: String,
+    address: AbsoluteAddress,
+    label: String,
+    opcode: String,
+    operand: String,
+}
+
+#[wasm_bindgen]
+impl Location {
+    #[wasm_bindgen(constructor)]
+    pub fn new(address: AbsoluteAddress, label: &str, opcode: &str, operand: &str) -> Location {
+        Location {
+            address,
+            label: String::from(label),
+            opcode: String::from(opcode),
+            operand: String::from(operand),
+        }
+    }
 }
 
 impl Instruction {
@@ -134,16 +146,7 @@ impl Instruction {
 
 #[wasm_bindgen]
 impl Assembler {
-    pub fn from_csv(data: &str) -> Result<Assembler, String> {
-        set_panic_hook();
-        let mut rdr = csv::Reader::from_reader(data.as_bytes());
-        Self::from_records(
-            rdr.deserialize()
-                .map(|record| record.map_err(|_| String::from("")))
-                .collect::<Result<_, _>>()?,
-        )
-    }
-    pub(crate) fn from_records(records: Vec<Location>) -> Result<Self, String> {
+    pub fn from_memory(records: Vec<Location>) -> Result<Assembler, String> {
         let mut symbol_table: SymbolTable = Default::default();
         let mut instructions: Instructions = Default::default();
         for record in records {
@@ -168,7 +171,7 @@ mod tests {
 
     #[test]
     fn parse_ldm() {
-        let a = Assembler::from_records(vec![Location {
+        let a = Assembler::from_memory(vec![Location {
             address: 0,
             label: String::from("L"),
             opcode: String::from("LDM"),

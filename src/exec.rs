@@ -21,15 +21,28 @@ impl RuntimeError {
 }
 
 #[wasm_bindgen]
+#[derive(Debug, Eq, PartialEq)]
+pub struct Step {
+    /// Program Counter
+    pub pc: AbsoluteAddress,
+    /// Accumulator
+    pub acc: Number,
+    /// Index Register
+    pub ix: Number,
+    pub out: Option<char>,
+}
+
+#[wasm_bindgen]
 impl Assembler {
     #[wasm_bindgen]
-    pub fn execute(&mut self, start: AbsoluteAddress) -> Result<(), RuntimeError> {
+    pub fn execute(&mut self, start: AbsoluteAddress) -> Result<Vec<Step>, RuntimeError> {
         set_panic_hook();
 
         let mut pc = start;
         let mut acc: Number = 0;
         let mut ix: Number = 0;
         let mut cmp: Option<bool> = None;
+        let mut steps: Vec<Step> = vec![];
 
         macro_rules! get_register {
             ($register:expr) => {
@@ -90,6 +103,12 @@ impl Assembler {
             let instruction = self.instructions.get(&pc);
             if let Some(Instruction::Operation(operation)) = &instruction {
                 println!("{}: ACC {}, IX {}", pc, acc, ix);
+                let mut step = Step {
+                    pc,
+                    acc,
+                    ix,
+                    out: None,
+                };
                 match operation {
                     Operation::LoadImmediate(number) => acc = *number,
                     Operation::LoadDirect(address) => acc = direct!(address),
@@ -124,9 +143,10 @@ impl Assembler {
                         }
                     }
                     Operation::Input => todo!(),
-                    Operation::Output => println!("{}", acc as char),
+                    Operation::Output => step.out = Some(acc as char),
                     Operation::End => break,
                 }
+                steps.push(step);
             } else {
                 return Err(RuntimeError {
                     address: pc,
@@ -136,7 +156,7 @@ impl Assembler {
             pc += 1;
         }
 
-        Ok(())
+        Ok(steps)
     }
 }
 
@@ -148,20 +168,30 @@ mod tests {
 
     #[test]
     fn exec() {
-        let mut a = Assembler::from_csv(include_str!("9618_s21_qp_11.csv")).unwrap();
+        let mut a = Assembler::from_memory(vec![
+            Location::new(200, "", "LDD", "365"),
+            Location::new(201, "", "CMP", "366"),
+            Location::new(202, "", "JPE", "209"),
+            Location::new(203, "", "INC", "ACC"),
+            Location::new(204, "", "STO", "365"),
+            Location::new(205, "", "MOV", "IX"),
+            Location::new(206, "", "LDX", "365"),
+            Location::new(207, "", "OUT", ""),
+            Location::new(208, "", "JMP", "200"),
+            Location::new(209, "", "END", ""),
+            Location::new(365, "", "", "1"),
+            Location::new(366, "", "", "3"),
+            Location::new(367, "", "", "65"),
+            Location::new(368, "", "", "66"),
+        ])
+        .unwrap();
         println!("{:#?}", a);
         a.execute(200).unwrap();
     }
 
     #[test]
     fn err_indirect() {
-        let mut a = Assembler::from_records(vec![Location {
-            address: 0,
-            label: String::from(""),
-            opcode: String::from("LDI"),
-            operand: String::from("0"),
-        }])
-        .unwrap();
+        let mut a = Assembler::from_memory(vec![Location::new(0, "", "LDI", "0")]).unwrap();
         println!("{:#?}", a);
         assert_eq!(
             a.execute(0),
