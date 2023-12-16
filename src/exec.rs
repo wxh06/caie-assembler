@@ -127,6 +127,11 @@ impl Assembler {
                     Operation::Output => println!("{}", acc as char),
                     Operation::End => break,
                 }
+            } else {
+                return Err(RuntimeError {
+                    address: pc,
+                    message: String::from("Invalid instruction"),
+                });
             }
             pc += 1;
         }
