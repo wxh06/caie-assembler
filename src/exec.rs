@@ -102,13 +102,7 @@ impl Assembler {
         loop {
             let instruction = self.instructions.get(&pc);
             if let Some(Instruction::Operation(operation)) = &instruction {
-                println!("{}: ACC {}, IX {}", pc, acc, ix);
-                let mut step = Step {
-                    pc,
-                    acc,
-                    ix,
-                    out: None,
-                };
+                let mut out: Option<char> = None;
                 match operation {
                     Operation::LoadImmediate(number) => acc = *number,
                     Operation::LoadDirect(address) => acc = direct!(address),
@@ -143,10 +137,10 @@ impl Assembler {
                         }
                     }
                     Operation::Input => todo!(),
-                    Operation::Output => step.out = Some(acc as char),
+                    Operation::Output => out = Some(acc as char),
                     Operation::End => break,
                 }
-                steps.push(step);
+                steps.push(Step { pc, acc, ix, out });
             } else {
                 return Err(RuntimeError {
                     address: pc,
