@@ -1,29 +1,33 @@
 <script setup lang="ts">
-import AssemblyEditor from "./components/AssemblyEditor.vue";
-import { Assembler, Location } from "@caie-assembler/pkg";
+import { ref } from "vue";
+import { Assembler, Location, type Step } from "@caie-assembler/pkg";
+import AssemblyEditor, {
+  type Instructions,
+} from "./components/AssemblyEditor.vue";
 import TraceTable from "./components/TraceTable.vue";
 
-const steps = Assembler.from_memory([
-  new Location(200, "", "LDD", "365"),
-  new Location(201, "", "CMP", "366"),
-  new Location(202, "", "JPE", "209"),
-  new Location(203, "", "INC", "ACC"),
-  new Location(204, "", "STO", "365"),
-  new Location(205, "", "MOV", "IX"),
-  new Location(206, "", "LDX", "365"),
-  new Location(207, "", "OUT", ""),
-  new Location(208, "", "JMP", "200"),
-  new Location(209, "", "END", ""),
-  new Location(365, "", "", "1"),
-  new Location(366, "", "", "3"),
-  new Location(367, "", "", "65"),
-  new Location(368, "", "", "66"),
-]).execute(200);
+const address = ref<number | "">("");
+const instructions = ref<Instructions>([]);
+const steps = ref<Step[]>([]);
+
+function execute() {
+  if (address.value)
+    steps.value = Assembler.from_memory(
+      instructions.value.map(
+        ({ address, label, opcode, operand }) =>
+          new Location(address as number, label, opcode, operand),
+      ),
+    ).execute(address.value);
+}
 </script>
 
 <template>
   <main>
-    <AssemblyEditor />
+    <form @submit.prevent="execute">
+      <AssemblyEditor v-model="instructions" />
+      <input type="number" min="1" v-model="address" />
+      <button type="submit">Execute</button>
+    </form>
     <TraceTable :steps="steps" />
   </main>
 </template>

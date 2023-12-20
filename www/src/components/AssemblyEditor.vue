@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import AssemblyEditorInstruction, {
   type Instruction,
 } from "./AssemblyEditorInstruction.vue";
+
+export type Instructions = {
+  address: number;
+  label: string;
+  opcode: string;
+  operand: string;
+}[];
 
 const emptyInstruction = (): Instruction => ({
   address: "",
@@ -11,7 +18,15 @@ const emptyInstruction = (): Instruction => ({
   operand: "",
 });
 
-const instructions = reactive<Instruction[]>([emptyInstruction()]);
+const props = defineProps<{ modelValue: Instructions }>();
+const emit = defineEmits<{
+  (e: "update:modelValue", instructions: Instructions): void;
+}>();
+
+const instructions = reactive<Instruction[]>([
+  ...props.modelValue,
+  emptyInstruction(),
+]);
 const flagged = reactive(new Set());
 const instructionAddresses = computed(() => {
   let addresses: number[];
@@ -33,7 +48,20 @@ const instructionAddresses = computed(() => {
 function insertLast(i: number) {
   if (i === instructions.length - 1) instructions.push(emptyInstruction());
 }
+
+watch(instructions, (v) =>
+  emit(
+    "update:modelValue",
+    v
+      .map((instruction, i) => ({
+        ...instruction,
+        address: instructionAddresses.value[i],
+      }))
+      .slice(0, v.length - 1),
+  ),
+);
 </script>
+
 <template>
   <AssemblyEditorInstruction
     v-for="(_, i) in instructions"
