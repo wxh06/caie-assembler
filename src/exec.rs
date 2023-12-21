@@ -139,6 +139,14 @@ impl Assembler {
                     Operation::Input => todo!(),
                     Operation::Output => out = Some(acc as char),
                     Operation::End => break,
+                    Operation::AndImmediate(number) => acc &= number,
+                    Operation::AndDirect(address) => acc &= direct!(address),
+                    Operation::OrImmediate(number) => acc |= number,
+                    Operation::OrDirect(address) => acc |= direct!(address),
+                    Operation::ExclusiveOrImmediate(number) => acc ^= number,
+                    Operation::ExclusiveOrDirect(address) => acc ^= direct!(address),
+                    Operation::LogicallyShiftLeftImmediate(number) => acc <<= number,
+                    Operation::LogicallyShiftRightImmediate(number) => acc >>= number,
                 }
                 steps.push(Step { pc, acc, ix, out });
             } else {

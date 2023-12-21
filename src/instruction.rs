@@ -41,6 +41,14 @@ pub enum Operation {
     Input,
     Output,
     End,
+    AndImmediate(Number),
+    AndDirect(Address),
+    OrImmediate(Number),
+    OrDirect(Address),
+    ExclusiveOrImmediate(Number),
+    ExclusiveOrDirect(Address),
+    LogicallyShiftLeftImmediate(Number),
+    LogicallyShiftRightImmediate(Number),
 }
 
 #[derive(Debug, Eq, PartialEq)]
