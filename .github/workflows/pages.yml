@@ -34,11 +34,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build Vite
-        run: pnpm --filter www run build
-
       - name: Setup Pages
+        id: pages
         uses: actions/configure-pages@v4
+
+      - name: Build Vite
+        run: pnpm --filter www run build --base "${{ steps.pages.outputs.base_path }}"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
