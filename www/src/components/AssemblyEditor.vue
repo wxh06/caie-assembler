@@ -18,9 +18,10 @@ const emptyInstruction = (): Instruction => ({
   operand: "",
 });
 
-const props = defineProps<{ modelValue: Instructions }>();
+const props = defineProps<{ modelValue: Instructions; start: number }>();
 const emit = defineEmits<{
   (e: "update:modelValue", instructions: Instructions): void;
+  (e: "update:start", address: number): void;
 }>();
 
 const instructions = reactive<Instruction[]>([
@@ -63,13 +64,28 @@ watch(instructions, (v) =>
 </script>
 
 <template>
-  <AssemblyEditorInstruction
-    v-for="(_, i) in instructions"
-    v-model="instructions[i]"
-    :address="instructionAddresses[i]"
-    :address-min="(instructionAddresses[i - 1] ?? 0) + 1"
-    :flagged="flagged.has(i)"
-    @update:model-value="() => insertLast(i)"
-    :key="i"
-  />
+  <table>
+    <thead>
+      <tr>
+        <th>Start</th>
+        <th>Address</th>
+        <th>Label</th>
+        <th>Opcode</th>
+        <th>Operand</th>
+      </tr>
+    </thead>
+    <tbody>
+      <AssemblyEditorInstruction
+        v-for="(_, i) in instructions"
+        v-model="instructions[i]"
+        :start="start"
+        :address="instructionAddresses[i]"
+        :address-min="(instructionAddresses[i - 1] ?? 0) + 1"
+        :flagged="flagged.has(i)"
+        @update:model-value="() => insertLast(i)"
+        @update:start="(address) => emit('update:start', address)"
+        :key="i"
+      />
+    </tbody>
+  </table>
 </template>

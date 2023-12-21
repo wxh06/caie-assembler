@@ -6,26 +6,25 @@ import AssemblyEditor, {
 } from "./components/AssemblyEditor.vue";
 import TraceTable from "./components/TraceTable.vue";
 
-const address = ref<number | "">("");
+const start = ref(1);
 const instructions = ref<Instructions>([]);
 const steps = ref<Step[]>([]);
 
 function execute() {
-  if (address.value)
+  if (start.value)
     steps.value = Assembler.from_memory(
       instructions.value.map(
         ({ address, label, opcode, operand }) =>
           new Location(address as number, label, opcode, operand),
       ),
-    ).execute(address.value);
+    ).execute(start.value);
 }
 </script>
 
 <template>
   <main>
     <form @submit.prevent="execute">
-      <AssemblyEditor v-model="instructions" />
-      <input type="number" min="1" v-model="address" />
+      <AssemblyEditor v-model="instructions" v-model:start="start" />
       <button type="submit">Execute</button>
     </form>
     <TraceTable :steps="steps" />
