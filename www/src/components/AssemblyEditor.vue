@@ -64,7 +64,7 @@ watch(instructions, (v) =>
 </script>
 
 <template>
-  <table>
+  <table class="table text-center">
     <thead>
       <tr>
         <th>Start</th>

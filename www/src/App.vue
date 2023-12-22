@@ -22,11 +22,15 @@ function execute() {
 </script>
 
 <template>
-  <main>
-    <form @submit.prevent="execute">
-      <AssemblyEditor v-model="instructions" v-model:start="start" />
-      <button type="submit">Execute</button>
-    </form>
-    <TraceTable :steps="steps" />
+  <main class="container">
+    <div class="row align-items-start">
+      <form class="mb-4 col-lg" @submit.prevent="execute">
+        <AssemblyEditor v-model="instructions" v-model:start="start" />
+        <button class="btn btn-primary float-end" type="submit">Execute</button>
+      </form>
+      <div class="mt-1 col-lg">
+        <TraceTable :steps="steps" />
+      </div>
+    </div>
   </main>
 </template>

@@ -29,6 +29,7 @@ watch(instruction, () => emit("update:modelValue", instruction));
   <tr>
     <td>
       <input
+        class="form-check-input align-middle"
         type="radio"
         name="start"
         v-if="
@@ -43,21 +44,28 @@ watch(instruction, () => emit("update:modelValue", instruction));
     </td>
     <td>
       <input
+        class="form-control form-control-sm"
         :placeholder="`${address}`"
-        :style="{ backgroundColor: flagged ? 'pink' : undefined }"
+        :class="{ 'is-invalid': flagged }"
         type="number"
         :min="addressMin"
         v-model="instruction.address"
       />
     </td>
     <td>
-      <input v-model="instruction.label" />
+      <input class="form-control form-control-sm" v-model="instruction.label" />
     </td>
     <td>
-      <input v-model="instruction.opcode" />
+      <input
+        class="form-control form-control-sm"
+        v-model="instruction.opcode"
+      />
     </td>
     <td>
-      <input v-model="instruction.operand" />
+      <input
+        class="form-control form-control-sm"
+        v-model="instruction.operand"
+      />
     </td>
   </tr>
 </template>

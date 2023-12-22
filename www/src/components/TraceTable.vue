@@ -5,7 +5,10 @@ defineProps<{ steps: Step[] }>();
 </script>
 
 <template>
-  <table>
+  <table
+    class="table table-bordered table-sm text-center"
+    style="table-layout: fixed"
+  >
     <thead>
       <tr>
         <th>PC</th>
@@ -24,14 +27,3 @@ defineProps<{ steps: Step[] }>();
     </tbody>
   </table>
 </template>
-
-<style>
-table {
-  border-collapse: collapse;
-}
-
-th,
-td {
-  border: 1px solid black;
-}
-</style>
