@@ -18,7 +18,11 @@ const emptyInstruction = (): Instruction => ({
   operand: "",
 });
 
-const props = defineProps<{ modelValue: Instructions; start: number }>();
+const props = defineProps<{
+  modelValue: Instructions;
+  start: number;
+  highlight: number;
+}>();
 const emit = defineEmits<{
   (e: "update:modelValue", instructions: Instructions): void;
   (e: "update:start", address: number): void;
@@ -78,6 +82,7 @@ watch(instructions, (v) =>
       <AssemblyEditorInstruction
         v-for="(_, i) in instructions"
         v-model="instructions[i]"
+        :class="{ 'table-active': highlight === instructionAddresses[i] }"
         :start="start"
         :address="instructionAddresses[i]"
         :address-min="(instructionAddresses[i - 1] ?? 0) + 1"

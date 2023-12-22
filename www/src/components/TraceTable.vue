@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Step } from "@caie-assembler/pkg";
 
-defineProps<{ steps: Step[] }>();
+defineProps<{ steps: Step[]; highlight: number }>();
+const emit = defineEmits<{ (e: "update:highlight", address: number): void }>();
 </script>
 
 <template>
@@ -18,7 +19,13 @@ defineProps<{ steps: Step[] }>();
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(step, i) in steps" :key="i">
+      <tr
+        v-for="(step, i) in steps"
+        :key="i"
+        :class="{ 'table-active': highlight === step.pc }"
+        @mouseover="() => $emit('update:highlight', step.pc)"
+        @mouseleave="() => emit('update:highlight', 0)"
+      >
         <td>{{ step.pc }}</td>
         <td>{{ step.acc }}</td>
         <td>{{ step.ix }}</td>
