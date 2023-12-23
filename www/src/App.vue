@@ -6,33 +6,29 @@ import AssemblyEditor, {
 } from "./components/AssemblyEditor.vue";
 import TraceTable from "./components/TraceTable.vue";
 
-const start = ref(1);
-const instructions = ref<Instructions>([]);
 const steps = ref<Step[]>([]);
 const highlight = ref<number>(0);
 
-function execute() {
-  if (start.value)
+function execute(instructions: Instructions, start: number) {
+  if (start)
     steps.value = Assembler.from_memory(
-      instructions.value.map(
+      instructions.map(
         ({ address, label, opcode, operand }) =>
           new Location(address as number, label, opcode, operand),
       ),
-    ).execute(start.value);
+    ).execute(start);
 }
 </script>
 
 <template>
   <main class="container">
     <div class="row align-items-start">
-      <form class="mb-4 col-lg" @submit.prevent="execute">
-        <AssemblyEditor
-          v-model="instructions"
-          v-model:start="start"
-          :highlight="highlight"
-        />
-        <button class="btn btn-primary float-end" type="submit">Execute</button>
-      </form>
+      <AssemblyEditor
+        class="mb-4 col-lg"
+        :highlight="highlight"
+        @submit="execute"
+      />
+
       <div class="mt-1 col-lg">
         <TraceTable :steps="steps" v-model:highlight="highlight" />
       </div>

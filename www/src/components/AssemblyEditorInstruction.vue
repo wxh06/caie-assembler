@@ -15,14 +15,19 @@ const props = defineProps<{
   start: number;
   flagged: boolean;
 }>();
-const emit = defineEmits([
-  "update:modelValue",
-  "update:address",
-  "update:start",
-]);
+const emit = defineEmits<{
+  (e: "update:modelValue", instruction: Instruction): void;
+  (e: "update:start", address: number): void;
+  (e: "focus"): void;
+}>();
 
 const instruction = reactive<Instruction>({ ...props.modelValue });
 watch(instruction, () => emit("update:modelValue", instruction));
+</script>
+
+<script lang="ts">
+export const notEmpty = (instruction: Instruction) =>
+  Object.values(instruction).map(Boolean).includes(true);
 </script>
 
 <template>
@@ -32,12 +37,7 @@ watch(instruction, () => emit("update:modelValue", instruction));
         class="form-check-input align-middle"
         type="radio"
         name="start"
-        v-if="
-          instruction.address ||
-          instruction.label ||
-          instruction.opcode ||
-          instruction.operand
-        "
+        v-if="notEmpty(instruction)"
         :checked="address === start"
         @input="$emit('update:start', address)"
       />
@@ -50,21 +50,28 @@ watch(instruction, () => emit("update:modelValue", instruction));
         type="number"
         :min="addressMin"
         v-model="instruction.address"
+        @focus="emit('focus')"
       />
     </td>
     <td>
-      <input class="form-control form-control-sm" v-model="instruction.label" />
+      <input
+        class="form-control form-control-sm"
+        v-model="instruction.label"
+        @focus="emit('focus')"
+      />
     </td>
     <td>
       <input
         class="form-control form-control-sm"
         v-model="instruction.opcode"
+        @focus="emit('focus')"
       />
     </td>
     <td>
       <input
         class="form-control form-control-sm"
         v-model="instruction.operand"
+        @focus="emit('focus')"
       />
     </td>
   </tr>

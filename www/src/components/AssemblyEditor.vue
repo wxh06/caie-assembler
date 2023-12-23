@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, ref } from "vue";
 import AssemblyEditorInstruction, {
+  notEmpty,
   type Instruction,
 } from "./AssemblyEditorInstruction.vue";
 
@@ -18,20 +19,13 @@ const emptyInstruction = (): Instruction => ({
   operand: "",
 });
 
-const props = defineProps<{
-  modelValue: Instructions;
-  start: number;
-  highlight: number;
-}>();
+defineProps<{ highlight: number }>();
 const emit = defineEmits<{
-  (e: "update:modelValue", instructions: Instructions): void;
-  (e: "update:start", address: number): void;
+  (e: "submit", instructions: Instructions, start: number): void;
 }>();
 
-const instructions = reactive<Instruction[]>([
-  ...props.modelValue,
-  emptyInstruction(),
-]);
+const start = ref<number>(1);
+const instructions = reactive<Instruction[]>([emptyInstruction()]);
 const flagged = reactive(new Set());
 const instructionAddresses = computed(() => {
   let addresses: number[];
@@ -54,43 +48,43 @@ function insertLast(i: number) {
   if (i === instructions.length - 1) instructions.push(emptyInstruction());
 }
 
-watch(instructions, (v) =>
+const submit = () =>
   emit(
-    "update:modelValue",
-    v
-      .map((instruction, i) => ({
-        ...instruction,
-        address: instructionAddresses.value[i],
-      }))
-      .slice(0, v.length - 1),
-  ),
-);
+    "submit",
+    instructions.filter(notEmpty).map((instruction, i) => ({
+      ...instruction,
+      address: instructionAddresses.value[i],
+    })),
+    start.value,
+  );
 </script>
 
 <template>
-  <table class="table text-center">
-    <thead>
-      <tr>
-        <th>Start</th>
-        <th>Address</th>
-        <th>Label</th>
-        <th>Opcode</th>
-        <th>Operand</th>
-      </tr>
-    </thead>
-    <tbody>
-      <AssemblyEditorInstruction
-        v-for="(_, i) in instructions"
-        v-model="instructions[i]"
-        :class="{ 'table-active': highlight === instructionAddresses[i] }"
-        :start="start"
-        :address="instructionAddresses[i]"
-        :address-min="(instructionAddresses[i - 1] ?? 0) + 1"
-        :flagged="flagged.has(i)"
-        @update:model-value="() => insertLast(i)"
-        @update:start="(address) => emit('update:start', address)"
-        :key="i"
-      />
-    </tbody>
-  </table>
+  <form @submit.prevent="submit">
+    <table class="table text-center">
+      <thead>
+        <tr>
+          <th>Start</th>
+          <th>Address</th>
+          <th>Label</th>
+          <th>Opcode</th>
+          <th>Operand</th>
+        </tr>
+      </thead>
+      <tbody>
+        <AssemblyEditorInstruction
+          v-for="(_, i) in instructions"
+          v-model="instructions[i]"
+          v-model:start="start"
+          :class="{ 'table-active': highlight === instructionAddresses[i] }"
+          :address="instructionAddresses[i]"
+          :address-min="(instructionAddresses[i - 1] ?? 0) + 1"
+          :flagged="flagged.has(i)"
+          @focus="insertLast(i)"
+          :key="i"
+        />
+      </tbody>
+    </table>
+    <button class="btn btn-primary float-end" type="submit">Execute</button>
+  </form>
 </template>
