@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { reactive, watch } from "vue";
-
 export interface Instruction {
   address: number | "";
   label: string;
@@ -21,8 +19,8 @@ const emit = defineEmits<{
   (e: "focus"): void;
 }>();
 
-const instruction = reactive<Instruction>({ ...props.modelValue });
-watch(instruction, () => emit("update:modelValue", instruction));
+const update = (field: keyof Instruction, value: number | string) =>
+  emit("update:modelValue", { ...props.modelValue, [field]: value });
 </script>
 
 <script lang="ts">
@@ -37,7 +35,7 @@ export const notEmpty = (instruction: Instruction) =>
         class="form-check-input align-middle"
         type="radio"
         name="start"
-        v-if="notEmpty(instruction)"
+        v-if="notEmpty(modelValue)"
         :checked="address === start"
         @input="$emit('update:start', address)"
       />
@@ -49,28 +47,38 @@ export const notEmpty = (instruction: Instruction) =>
         :class="{ 'is-invalid': flagged }"
         type="number"
         :min="addressMin"
-        v-model="instruction.address"
+        :value="modelValue.address"
+        @input="
+          (e) =>
+            update(
+              'address',
+              parseInt((e.target as HTMLInputElement).value, 10),
+            )
+        "
         @focus="emit('focus')"
       />
     </td>
     <td>
       <input
         class="form-control form-control-sm"
-        v-model="instruction.label"
+        :value="modelValue.label"
+        @input="(e) => update('label', (e.target as HTMLInputElement).value)"
         @focus="emit('focus')"
       />
     </td>
     <td>
       <input
         class="form-control form-control-sm"
-        v-model="instruction.opcode"
+        :value="modelValue.opcode"
+        @input="(e) => update('opcode', (e.target as HTMLInputElement).value)"
         @focus="emit('focus')"
       />
     </td>
     <td>
       <input
         class="form-control form-control-sm"
-        v-model="instruction.operand"
+        :value="modelValue.operand"
+        @input="(e) => update('operand', (e.target as HTMLInputElement).value)"
         @focus="emit('focus')"
       />
     </td>

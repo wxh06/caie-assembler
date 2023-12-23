@@ -4,6 +4,7 @@ import AssemblyEditorInstruction, {
   notEmpty,
   type Instruction,
 } from "./AssemblyEditorInstruction.vue";
+import AssemblyEditorImport from "./AssemblyEditorImport.vue";
 
 export type Instructions = {
   address: number;
@@ -25,12 +26,12 @@ const emit = defineEmits<{
 }>();
 
 const start = ref<number>(1);
-const instructions = reactive<Instruction[]>([emptyInstruction()]);
+const instructions = ref<Instruction[]>([emptyInstruction()]);
 const flagged = reactive(new Set());
 const instructionAddresses = computed(() => {
   let addresses: number[];
   flagged.clear();
-  instructions.forEach((instruction, i) => {
+  instructions.value.forEach((instruction, i) => {
     if (!i) addresses = [instruction.address || 1];
     else {
       addresses.push(
@@ -45,18 +46,21 @@ const instructionAddresses = computed(() => {
 });
 
 function insertLast(i: number) {
-  if (i === instructions.length - 1) instructions.push(emptyInstruction());
+  if (i === instructions.value.length - 1)
+    instructions.value.push(emptyInstruction());
 }
 
 const submit = () =>
   emit(
     "submit",
-    instructions.filter(notEmpty).map((instruction, i) => ({
+    instructions.value.filter(notEmpty).map((instruction, i) => ({
       ...instruction,
       address: instructionAddresses.value[i],
     })),
     start.value,
   );
+
+const copy = (text: string) => navigator.clipboard.writeText(text);
 </script>
 
 <template>
@@ -85,6 +89,16 @@ const submit = () =>
         />
       </tbody>
     </table>
+
+    <AssemblyEditorImport @import="(v) => (instructions = v)" />
+    <button
+      type="button"
+      class="ms-2 btn btn-outline-primary"
+      @click="copy(JSON.stringify(instructions))"
+    >
+      Export
+    </button>
+
     <button class="btn btn-primary float-end" type="submit">Execute</button>
   </form>
 </template>
