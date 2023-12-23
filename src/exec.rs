@@ -102,6 +102,7 @@ impl Assembler {
         loop {
             let instruction = self.instructions.get(&pc);
             if let Some(Instruction::Operation(operation)) = &instruction {
+                let current_address = pc;
                 let mut out: Option<char> = None;
                 match operation {
                     Operation::LoadImmediate(number) => acc = *number,
@@ -148,16 +149,26 @@ impl Assembler {
                     Operation::LogicallyShiftLeftImmediate(number) => acc <<= number,
                     Operation::LogicallyShiftRightImmediate(number) => acc >>= number,
                 }
-                steps.push(Step { pc, acc, ix, out });
+                steps.push(Step {
+                    pc: current_address,
+                    acc,
+                    ix,
+                    out,
+                });
+                pc += 1;
             } else {
                 return Err(RuntimeError {
                     address: pc,
                     message: String::from("Invalid instruction"),
                 });
             }
-            pc += 1;
         }
-
+        steps.push(Step {
+            pc,
+            acc,
+            ix,
+            out: None,
+        });
         Ok(steps)
     }
 }

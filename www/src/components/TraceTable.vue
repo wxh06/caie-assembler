@@ -27,8 +27,18 @@ const emit = defineEmits<{ (e: "update:highlight", address: number): void }>();
         @mouseleave="() => emit('update:highlight', 0)"
       >
         <td>{{ step.pc }}</td>
-        <td>{{ step.acc }}</td>
-        <td>{{ step.ix }}</td>
+        <td>
+          <span
+            :class="{ 'text-muted': step.acc === (steps[i - 1]?.acc ?? 0) }"
+          >
+            {{ step.acc }}
+          </span>
+        </td>
+        <td>
+          <span :class="{ 'text-muted': step.ix === (steps[i - 1]?.ix ?? 0) }">
+            {{ step.ix }}
+          </span>
+        </td>
         <td>{{ step.out }}</td>
       </tr>
     </tbody>
