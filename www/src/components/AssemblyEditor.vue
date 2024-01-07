@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue";
+import { Assembler, Location } from "@caie-assembler/pkg";
 import AssemblyEditorInstruction, {
   notEmpty,
   type Instruction,
@@ -22,7 +23,7 @@ const emptyInstruction = (): Instruction => ({
 
 defineProps<{ highlight: number }>();
 const emit = defineEmits<{
-  (e: "submit", instructions: Instructions, start: number): void;
+  (e: "submit", assembler: Assembler, start: number): void;
 }>();
 
 const start = ref<number>(1);
@@ -53,10 +54,14 @@ function insertLast(i: number) {
 const submit = () =>
   emit(
     "submit",
-    instructions.value.filter(notEmpty).map((instruction, i) => ({
-      ...instruction,
-      address: instructionAddresses.value[i],
-    })),
+    Assembler.from_memory(
+      instructions.value
+        .filter(notEmpty)
+        .map(
+          ({ label, opcode, operand }, i) =>
+            new Location(instructionAddresses.value[i], label, opcode, operand),
+        ),
+    ),
     start.value,
   );
 
